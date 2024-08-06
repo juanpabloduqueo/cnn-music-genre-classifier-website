@@ -1,10 +1,9 @@
 from flask import Flask, render_template, request
-import math
 import numpy as np
 from tensorflow import keras
 import librosa
 import os
-
+import math
 
 SAMPLE_RATE = 22050
 GENRE_MODEL_PATH = 'CNN_music_genre_classifier.keras'
@@ -12,9 +11,6 @@ GENRE_MAPPINGS = {0: 'blues', 1: 'classical', 2: 'country', 3: 'disco', 4: 'hiph
 
 
 app = Flask(__name__)
-
-# Load the model once at startup
-model = keras.models.load_model(GENRE_MODEL_PATH)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -99,6 +95,7 @@ def predict_genres(data_array):
     Returns: 
         top_3_genres: List of 3 lists containing genre and accuracy metric
     """
+    model = keras.models.load_model(GENRE_MODEL_PATH)
     mfccs = data_array
     mfccs = mfccs.reshape(mfccs.shape[0], mfccs.shape[1], mfccs.shape[2], 1)
     predictions = model.predict(mfccs)
@@ -113,7 +110,3 @@ def predict_genres(data_array):
 if __name__ == '__main__':
     app.run(debug=True)
 
-
-# To write this code, we followed the tutorial by Miguel Grinberg:
-#    blog.miguelgrinberg.com/post/handling-file-uploads-with-flask
-# TO DO: Create audio music player for local web UI
