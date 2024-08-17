@@ -24,6 +24,10 @@ def index():
         file_path = upload_file(request.files['file'])
         if file_path:
             data_array = process_audio_file(file_path)
+            # Check if data array is not an error message
+            if isinstance(data_array, str):
+                delete_after_prediction(file_path)                
+                return data_array   # Return error message
             top_3_genres = predict_genres(data_array)
             filename = os.path.basename(file_path)
             delete_after_prediction(file_path)
@@ -61,7 +65,16 @@ def process_audio_file(file_path, n_mfcc=13, n_fft=2048, hop_length=512, duratio
     Returns: 
         data_array: MFCC information in a data array
     """
-    signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
+    # Check file format
+    file_extension = os.path.splitext(file_path)[1].lower()
+    if file_extension not in ['.mp3', '.wav', '.flac']:
+        return 'Oops! Currently I only support .mp3, .wav, or .flac audio formats. Please go back and select a file with a supported format.'
+    # Load the audio file with exception handling
+    try:
+        signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
+    except Exception as e:
+        return f'Error loading file: {str(e)}'
+    
     samples_per_clip = sr * duration_of_clip
     data = {"mfcc": []}
     total_samples = len(signal)
